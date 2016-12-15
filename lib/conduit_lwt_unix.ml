@@ -276,7 +276,7 @@ let sockaddr_on_tcp_port ctx port =
   match ctx.src with
   | Some (ADDR_UNIX _) -> failwith "Cant listen to TCP on a domain socket"
   | Some (ADDR_INET (a,_)) -> ADDR_INET (a,port), Ipaddr_unix.of_inet_addr a
-  | None -> ADDR_INET (inet_addr_any,port), Ipaddr.(V4 V4.any)
+  | None -> ADDR_INET (inet6_addr_any, port), Ipaddr.(V6 V6.unspecified)
 
 let serve_with_openssl ?timeout ?stop ~ctx ~certfile ~keyfile
                        ~pass ~port callback =
