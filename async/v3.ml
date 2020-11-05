@@ -74,7 +74,7 @@ let with_connection (type a) ?interrupt (addr: a addr)
       (Tcp.Where_to_connect.of_inet_address addr)
       begin fun s rd wr ->
         Ssl.connect ~cfg rd wr >>= fun (rd, wr) ->
-        Monitor.protect (fun () -> f (Inet_sock s) rd wr) ~finally:begin fun () ->
+        Monitor.protect ~run:`Now ~rest:`Raise (fun () -> f (Inet_sock s) rd wr) ~finally:begin fun () ->
           Deferred.all_unit [ Reader.close rd ; Writer.close wr ]
         end
       end
@@ -140,6 +140,7 @@ let serve
           ?ca_file ?ca_path ~crt_file ~key_file () in
       Ssl.listen cfg rd wr >>= fun (rd,wr) ->
       Monitor.protect
+        ~run:`Now ~rest:`Raise
         (fun () -> handle_request sock rd wr)
         ~finally:(fun () ->
             Deferred.all_unit [ Reader.close rd ; Writer.close wr ])

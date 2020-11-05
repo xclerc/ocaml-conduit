@@ -37,7 +37,7 @@ let with_connection ?interrupt dst f =
       (Tcp.Where_to_connect.of_host_and_port endp)
       begin fun _ rd wr ->
         Ssl.connect ~cfg rd wr >>= fun (rd, wr) ->
-        Monitor.protect (fun () -> f rd wr) ~finally:begin fun () ->
+        Monitor.protect ~run:`Now ~rest:`Raise (fun () -> f rd wr) ~finally:begin fun () ->
           Deferred.all_unit [ Reader.close rd ; Writer.close wr ]
         end
       end
@@ -95,6 +95,7 @@ let serve
           ?ca_file ?ca_path ~crt_file ~key_file () in
       Ssl.listen cfg rd wr >>= fun (rd,wr) ->
       Monitor.protect
+        ~run:`Now ~rest:`Raise
         (fun () -> handle_request sock rd wr)
         ~finally:(fun () ->
             Deferred.all_unit [ Reader.close rd ; Writer.close wr ])
